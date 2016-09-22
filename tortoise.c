@@ -45,12 +45,13 @@ static void stop_gnuplot()
     }
 }
 
-static void tortoise_reset()
+static SCM tortoise_reset()
 {
     x = y = direction = 0;
     pendown = 1;
     fprintf(gp, "clear\n");
     fflush(gp);
+    return SCM_UNSPECIFIED;
 }
 
 static void draw_line(double x1, double y1, double x2, double y2)
@@ -62,25 +63,32 @@ static void draw_line(double x1, double y1, double x2, double y2)
     fflush(gp);
 }
 
-static void tortoise_pendown()
+static SCM tortoise_pendown()
 {
+    SCM result = scm_from_bool(pendown);
     pendown = 1;
+    return result;
 }
 
-static void tortoise_penup()
+static SCM tortoise_penup()
 {
+    SCM result = scm_from_bool(pendown);
     pendown = 0;
+    return result;
 }
 
-static void tortoise_turn(double degrees)
+static SCM tortoise_turn(SCM degrees)
 {
-    direction += M_PI / 180.0 * degrees;
+    const double value = scm_to_double (degrees);
+    direction += M_PI / 180.0 * value;
+    return scm_from_double (direction * 180.0 / M_PI);
 }
 
-static void tortoise_move(double length)
+static SCM tortoise_move(SCM length)
 {
-    const double newX = x + length * cos(direction);
-    const double newY = y + length * sin(direction);
+    const double value = scm_to_double(length);
+    const double newX = x + value * cos(direction);
+    const double newY = y + value * sin(direction);
 
     if (pendown) {
         draw_line(x, y, newX, newY);
@@ -88,10 +96,17 @@ static void tortoise_move(double length)
 
     x = newX;
     y = newY;
+
+    return scm_list_2(scm_from_double(x), scm_from_double(y));
 }
 
 static void* register_functions (void* data)
 {
+    scm_c_define_gsubr("tortoise-reset",   0, 0, 0, &tortoise_reset);
+    scm_c_define_gsubr("tortoise-penup",   0, 0, 0, &tortoise_penup);
+    scm_c_define_gsubr("tortoise-pendown", 0, 0, 0, &tortoise_pendown);
+    scm_c_define_gsubr("tortoise-turn",    1, 0, 0, &tortoise_turn);
+    scm_c_define_gsubr("tortoise-move",    1, 0, 0, &tortoise_move);
     return NULL;
 }
 
