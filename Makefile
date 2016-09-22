@@ -1,7 +1,7 @@
 # Basic Makefile for the tortoise package.
 
-CFLAGS = -O0 -Wall
-LIBS = -lm
+CFLAGS = -O0 -Wall `guile-config compile`
+LIBS = `guile-config link` -lm
 
 .PHONY: clean build run
 
